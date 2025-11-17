@@ -1,12 +1,12 @@
 # Etsy Product Creation Tool (EPCT)
 
-EPCT is a powerful tool designed to streamline the process of creating digital image products for Etsy stores. With EPCT, users can easily generate high-quality digital posters, printable products, and the required mockup images to showcase their products effectively.
+EPCT is a CLI tool designed to streamline the process of creating digital image products for Etsy stores. With EPCT, users can easily generate high-quality digital poster descriptions and mockup specifications using Gemini AI.
 
 ## Features
-- **User-Friendly Web UI**: Beautiful web interface for generating and managing posters
-- **CLI for Mockup Generation**: Command-line interface for creating product mockups
-- **Automated Product Creation**: Generate digital posters through Gemini AI based on text prompts
-- **Mockup Generation**: Automatically create mockup descriptions for your digital products
+- **Interactive CLI**: User-friendly command-line interface with clear menus
+- **Poster Generation**: Create detailed poster design specifications using AI prompts
+- **Mockup Generation**: Generate mockup descriptions for your digital products
+- **Local Storage**: All generated content saved locally for later use
 
 ## Prerequisites
 
@@ -35,50 +35,52 @@ cp .env.example .env
 4. Edit `.env` and add your Gemini API key:
 ```
 GEMINI_API_KEY=your_actual_api_key_here
-PORT=3000
 ```
 
 ## Usage
 
-### Web UI (Poster Generation)
+### Running the CLI
 
-Start the web UI server to generate and manage posters:
-
-```bash
-npm run dev:ui
-```
-
-Or build and run in production mode:
-
-```bash
-npm run start:ui
-```
-
-The web UI will be available at `http://localhost:3000`
-
-**Features:**
-- Generate posters using AI prompts
-- View all generated posters
-- Download posters as text files
-
-### CLI (Mockup Generation)
-
-Run the CLI to create mockups from your generated posters:
-
+Development mode (with hot reload):
 ```bash
 npm run dev
 ```
 
-Or build and run in production mode:
-
+Production mode:
 ```bash
 npm start
 ```
 
-**Features:**
-- Select from previously generated posters
-- Create mockups by describing the scene/prop
-- View all generated mockups
+### CLI Features
+
+The CLI provides an interactive menu with the following options:
+
+1. **Generate a new poster**
+   - Enter a description of your desired poster
+   - AI generates a detailed design specification
+   - Poster is saved locally for later use
+
+2. **Generate mockup from poster**
+   - Select from previously generated posters
+   - Describe the mockup scene/prop (e.g., "framed on a white wall")
+   - AI generates a detailed mockup specification
+
+3. **View all posters**
+   - List all generated posters with details
+
+4. **View all mockups**
+   - List all generated mockups with details
+
+## Example Workflow
+
+1. Start the CLI: `npm run dev`
+2. Select "Generate a new poster"
+3. Enter prompt: "Minimalist motivational poster with mountain scenery"
+4. Wait for AI to generate the poster design
+5. Select "Generate mockup from poster"
+6. Choose your newly created poster from the list
+7. Enter mockup scene: "framed on a white wall in a modern living room"
+8. AI generates the mockup specification
 
 ## Development
 
@@ -108,46 +110,43 @@ npm run build  # Compile TypeScript to JavaScript
 ```
 etsy-product-creation-tool/
 ├── src/
-│   ├── cli.ts                    # CLI application entry point
-│   ├── index.ts                  # Main CLI entry
+│   ├── cli.ts                    # Main CLI interface
+│   ├── index.ts                  # Application entry point
 │   ├── services/
 │   │   ├── gemini.service.ts     # Gemini AI integration
-│   │   └── storage.service.ts    # File storage management
-│   ├── types/
-│   │   └── index.ts              # TypeScript type definitions
-│   └── ui/
-│       ├── index.ts              # Web UI server entry
-│       └── server.ts             # Express server setup
-├── public/
-│   └── index.html                # Web UI interface
+│   │   └── storage.service.ts    # Local file storage
+│   └── types/
+│       └── index.ts              # TypeScript type definitions
 ├── output/
 │   ├── posters/                  # Generated posters
+│   │   └── metadata.json         # Poster metadata
 │   └── mockups/                  # Generated mockups
+│       └── metadata.json         # Mockup metadata
 └── tests/                        # Test files
 ```
 
 ## How It Works
 
-1. **Poster Generation (Web UI)**:
-   - User enters a description of the desired poster
+1. **Poster Generation**:
+   - User provides a text description
    - Gemini AI generates a detailed design specification
-   - The poster is saved locally and displayed in the UI
-   - User can download the poster description
+   - Specification includes layout, colors, typography, visual elements
+   - Saved locally with metadata
 
-2. **Mockup Generation (CLI)**:
+2. **Mockup Generation**:
    - User selects a previously generated poster
-   - User describes the mockup scene (e.g., "framed on a white wall")
-   - Gemini AI generates a detailed mockup specification
-   - The mockup is saved locally
+   - User describes the mockup scene/setting
+   - Gemini AI generates mockup specification
+   - Includes details about presentation, lighting, perspective
+   - Saved locally with reference to original poster
 
 ## Notes
 
-- Currently, the tool generates text-based descriptions of posters and mockups
+- The tool generates text-based descriptions of posters and mockups
 - These descriptions can be used with image generation tools to create actual images
 - All generated content is stored in the `output/` directory
-- Poster and mockup metadata is stored in JSON files
+- Metadata is stored in JSON files for easy retrieval
 
 ## License
 
 ISC
-

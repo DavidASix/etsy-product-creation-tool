@@ -9,9 +9,7 @@
   "scripts": {
     "build": "tsc",
     "start": "npm run build && node dist/index.js",
-    "start:ui": "npm run build && node dist/ui/index.js",
     "dev": "tsx src/index.ts",
-    "dev:ui": "tsx src/ui/index.ts",
     "test": "vitest",
     "test:run": "vitest run",
     "lint": "eslint src/**/*.ts",
@@ -20,7 +18,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
-    "@types/express": "^5.0.5",
     "@types/inquirer": "^9.0.9",
     "@types/node": "^24.10.1",
     "@typescript-eslint/eslint-plugin": "^8.46.4",
@@ -36,9 +33,7 @@
   },
   "dependencies": {
     "@google/genai": "^1.29.1",
-    "commander": "^14.0.2",
     "dotenv": "^17.2.3",
-    "express": "^5.1.0",
     "inquirer": "^13.0.1"
   }
 }

@@ -1,45 +1,49 @@
 import inquirer from 'inquirer';
 import { StorageService } from './services/storage.service';
 import { GeminiService } from './services/gemini.service';
-import { Mockup } from './types';
+import { Poster, Mockup } from './types';
 
-interface MainMenuAnswer {
-  action: 'generate-mockup' | 'view-mockups' | 'exit';
-}
-
-interface PosterSelectionAnswer {
-  posterId: string;
-}
-
-interface MockupPromptAnswer {
-  propDescription: string;
-}
+type MainMenuAction =
+  | 'generate-poster'
+  | 'generate-mockup'
+  | 'view-posters'
+  | 'view-mockups'
+  | 'exit';
 
 export async function runCli(): Promise<void> {
-  console.log('\n🎨 Etsy Product Creator - Mockup Generator CLI\n');
+  console.log('\n🎨 Etsy Product Creation Tool - CLI\n');
 
   const storageService = new StorageService();
+  const geminiService = new GeminiService();
   await storageService.initialize();
 
   let running = true;
 
   while (running) {
-    const { action } = await inquirer.prompt<MainMenuAnswer>([
+    const { action } = await inquirer.prompt<{ action: MainMenuAction }>([
       {
         type: 'list',
         name: 'action',
         message: 'What would you like to do?',
         choices: [
-          { name: 'Generate mockup from poster', value: 'generate-mockup' },
-          { name: 'View all mockups', value: 'view-mockups' },
-          { name: 'Exit', value: 'exit' },
+          { name: '📝 Generate a new poster', value: 'generate-poster' },
+          { name: '🖼️  Generate mockup from poster', value: 'generate-mockup' },
+          { name: '👀 View all posters', value: 'view-posters' },
+          { name: '📋 View all mockups', value: 'view-mockups' },
+          { name: '🚪 Exit', value: 'exit' },
         ],
       },
     ]);
 
     switch (action) {
+      case 'generate-poster':
+        await generatePoster(storageService, geminiService);
+        break;
       case 'generate-mockup':
-        await generateMockup(storageService);
+        await generateMockup(storageService, geminiService);
+        break;
+      case 'view-posters':
+        await viewPosters(storageService);
         break;
       case 'view-mockups':
         await viewMockups(storageService);
@@ -52,27 +56,76 @@ export async function runCli(): Promise<void> {
   }
 }
 
-async function generateMockup(storageService: StorageService): Promise<void> {
+async function generatePoster(
+  storageService: StorageService,
+  geminiService: GeminiService,
+): Promise<void> {
+  const { prompt } = await inquirer.prompt<{ prompt: string }>([
+    {
+      type: 'input',
+      name: 'prompt',
+      message: 'Describe the poster you want to create:',
+      validate: (input: string) =>
+        input.trim() !== '' || 'Please enter a description',
+    },
+  ]);
+
+  console.log('\n⏳ Generating poster...\n');
+
+  try {
+    const posterContent = await geminiService.generatePoster(prompt);
+
+    const poster: Poster = {
+      id: Date.now().toString(),
+      prompt,
+      imageData: posterContent,
+      createdAt: new Date(),
+      filepath: `output/posters/${Date.now()}.txt`,
+    };
+
+    await storageService.savePoster(poster);
+
+    console.log('✅ Poster generated successfully!');
+    console.log(`\nPoster ID: ${poster.id}`);
+    console.log(`Saved to: ${poster.filepath}`);
+    console.log(`\nPoster preview:\n`);
+    console.log(
+      posterContent.substring(0, 300) +
+        (posterContent.length > 300 ? '...' : ''),
+    );
+    console.log('\n');
+  } catch (error) {
+    console.error(
+      '\n❌ Error generating poster:',
+      error instanceof Error ? error.message : 'Unknown error',
+    );
+    console.log('');
+  }
+}
+
+async function generateMockup(
+  storageService: StorageService,
+  geminiService: GeminiService,
+): Promise<void> {
   const posters = await storageService.getAllPosters();
 
   if (posters.length === 0) {
-    console.log(
-      '\n❌ No posters found. Please generate a poster using the UI first.\n',
-    );
+    console.log('\n❌ No posters found. Please generate a poster first.\n');
     return;
   }
 
   const posterChoices = posters.map((poster) => ({
-    name: `${poster.prompt.substring(0, 50)}${poster.prompt.length > 50 ? '...' : ''} (ID: ${poster.id})`,
+    name: `${poster.prompt.substring(0, 60)}${poster.prompt.length > 60 ? '...' : ''} (Created: ${new Date(poster.createdAt).toLocaleDateString()})`,
     value: poster.id,
   }));
 
-  const { posterId } = await inquirer.prompt<PosterSelectionAnswer>([
+  const { posterId } = await inquirer.prompt<{ posterId: string }>([
     {
       type: 'list',
       name: 'posterId',
       message: 'Select a poster to create a mockup for:',
       choices: posterChoices,
+      loop: false,
     },
   ]);
 
@@ -82,7 +135,9 @@ async function generateMockup(storageService: StorageService): Promise<void> {
     return;
   }
 
-  const { propDescription } = await inquirer.prompt<MockupPromptAnswer>([
+  const { propDescription } = await inquirer.prompt<{
+    propDescription: string;
+  }>([
     {
       type: 'input',
       name: 'propDescription',
@@ -96,7 +151,6 @@ async function generateMockup(storageService: StorageService): Promise<void> {
   console.log('\n⏳ Generating mockup...\n');
 
   try {
-    const geminiService = new GeminiService();
     const mockupContent = await geminiService.generateMockup(
       poster.imageData,
       propDescription,
@@ -118,8 +172,8 @@ async function generateMockup(storageService: StorageService): Promise<void> {
     console.log(`Saved to: ${mockup.filepath}`);
     console.log(`\nMockup preview:\n`);
     console.log(
-      mockupContent.substring(0, 200) +
-        (mockupContent.length > 200 ? '...' : ''),
+      mockupContent.substring(0, 300) +
+        (mockupContent.length > 300 ? '...' : ''),
     );
     console.log('\n');
   } catch (error) {
@@ -129,6 +183,27 @@ async function generateMockup(storageService: StorageService): Promise<void> {
     );
     console.log('');
   }
+}
+
+async function viewPosters(storageService: StorageService): Promise<void> {
+  const posters = await storageService.getAllPosters();
+
+  if (posters.length === 0) {
+    console.log('\n📭 No posters found.\n');
+    return;
+  }
+
+  console.log(`\n📋 Found ${posters.length} poster(s):\n`);
+
+  for (const poster of posters) {
+    console.log(`ID: ${poster.id}`);
+    console.log(`Prompt: ${poster.prompt}`);
+    console.log(`Created: ${poster.createdAt.toLocaleString()}`);
+    console.log(`File: ${poster.filepath}`);
+    console.log('---');
+  }
+
+  console.log('');
 }
 
 async function viewMockups(storageService: StorageService): Promise<void> {

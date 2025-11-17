@@ -10,6 +10,7 @@ vi.mock('./services/storage.service', () => {
         initialize: vi.fn().mockResolvedValue(undefined),
         getAllPosters: vi.fn().mockResolvedValue([]),
         getPosterById: vi.fn().mockResolvedValue(null),
+        savePoster: vi.fn().mockResolvedValue(undefined),
         saveMockup: vi.fn().mockResolvedValue(undefined),
         getAllMockups: vi.fn().mockResolvedValue([]),
       };
@@ -20,6 +21,7 @@ vi.mock('./services/gemini.service', () => {
   return {
     GeminiService: vi.fn(function GeminiService() {
       return {
+        generatePoster: vi.fn().mockResolvedValue('Mock poster content'),
         generateMockup: vi.fn().mockResolvedValue('Mock mockup content'),
       };
     }),
@@ -43,7 +45,7 @@ describe('CLI', () => {
     await runCli();
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
-      '\n🎨 Etsy Product Creator - Mockup Generator CLI\n',
+      '\n🎨 Etsy Product Creation Tool - CLI\n',
     );
   });
 
@@ -71,6 +73,16 @@ describe('CLI', () => {
     expect(consoleLogSpy).toHaveBeenCalledWith('\n👋 Goodbye!\n');
   });
 
+  it('should handle view posters with no posters', async () => {
+    vi.mocked(inquirer.prompt)
+      .mockResolvedValueOnce({ action: 'view-posters' })
+      .mockResolvedValueOnce({ action: 'exit' });
+
+    await runCli();
+
+    expect(consoleLogSpy).toHaveBeenCalledWith('\n📭 No posters found.\n');
+  });
+
   it('should handle view mockups with no mockups', async () => {
     vi.mocked(inquirer.prompt)
       .mockResolvedValueOnce({ action: 'view-mockups' })
@@ -89,7 +101,7 @@ describe('CLI', () => {
     await runCli();
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
-      '\n❌ No posters found. Please generate a poster using the UI first.\n',
+      '\n❌ No posters found. Please generate a poster first.\n',
     );
   });
 });
