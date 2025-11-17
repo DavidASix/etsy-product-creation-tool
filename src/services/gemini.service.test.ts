@@ -53,7 +53,7 @@ describe('GeminiService', () => {
         model: string;
         contents: string;
       };
-      expect(callArgs.model).toBe('gemini-1.5-flash');
+      expect(callArgs.model).toBe('gemini-2.5-flash');
       expect(callArgs.contents).toContain('Test prompt');
     });
 
@@ -98,7 +98,7 @@ describe('GeminiService', () => {
         model: string;
         contents: string;
       };
-      expect(callArgs.model).toBe('gemini-1.5-flash');
+      expect(callArgs.model).toBe('gemini-2.5-flash');
       expect(callArgs.contents).toContain('Poster description');
       expect(callArgs.contents).toContain('Prop description');
     });

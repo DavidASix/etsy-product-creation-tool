@@ -13,6 +13,11 @@ type MainMenuAction =
 export async function runCli(): Promise<void> {
   console.log('\n🎨 Etsy Product Creation Tool - CLI\n');
 
+  // Ensure stdin is in raw mode for interactive prompts
+  if (process.stdin.isTTY && process.stdin.setRawMode) {
+    process.stdin.setRawMode(true);
+  }
+
   const storageService = new StorageService();
   const geminiService = new GeminiService();
   await storageService.initialize();
