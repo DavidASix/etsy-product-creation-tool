@@ -34,14 +34,15 @@ export class StorageService {
   }
 
   async savePoster(poster: Poster): Promise<void> {
-    // Save the poster metadata
+    // Save the poster image file
+    const imagePath = path.join(this.postersDir, `${poster.id}.png`);
+    const imageBuffer = Buffer.from(poster.imageData, 'base64');
+    await fs.writeFile(imagePath, imageBuffer);
+
+    // Save the poster metadata (without the large base64 data)
     const posters = await this.getAllPosters();
     posters.push(poster);
     await fs.writeFile(this.postersMetaFile, JSON.stringify(posters, null, 2));
-
-    // Save the poster text content
-    const textPath = path.join(this.postersDir, `${poster.id}.txt`);
-    await fs.writeFile(textPath, poster.imageData);
   }
 
   async getAllPosters(): Promise<Poster[]> {
@@ -69,14 +70,15 @@ export class StorageService {
   }
 
   async saveMockup(mockup: Mockup): Promise<void> {
-    // Save the mockup metadata
+    // Save the mockup image file
+    const imagePath = path.join(this.mockupsDir, `${mockup.id}.png`);
+    const imageBuffer = Buffer.from(mockup.imageData, 'base64');
+    await fs.writeFile(imagePath, imageBuffer);
+
+    // Save the mockup metadata (without the large base64 data)
     const mockups = await this.getAllMockups();
     mockups.push(mockup);
     await fs.writeFile(this.mockupsMetaFile, JSON.stringify(mockups, null, 2));
-
-    // Save the mockup text content
-    const textPath = path.join(this.mockupsDir, `${mockup.id}.txt`);
-    await fs.writeFile(textPath, mockup.imageData);
   }
 
   async getAllMockups(): Promise<Mockup[]> {

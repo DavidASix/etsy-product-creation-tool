@@ -37,23 +37,37 @@ describe('GeminiService', () => {
   });
 
   describe('generatePoster', () => {
-    it('should generate poster content from prompt', async (): Promise<void> => {
+    it('should generate poster image from prompt', async (): Promise<void> => {
+      const mockBase64Image = 'base64ImageDataHere';
       const mockResponse = {
-        text: 'Generated poster content',
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  inlineData: {
+                    data: mockBase64Image,
+                    mimeType: 'image/png',
+                  },
+                },
+              ],
+            },
+          },
+        ],
       };
 
       mockGenerateContent.mockResolvedValue(mockResponse);
 
       const result = await geminiService.generatePoster('Test prompt');
 
-      expect(result).toBe('Generated poster content');
+      expect(result).toBe(mockBase64Image);
       expect(mockGenerateContent).toHaveBeenCalledTimes(1);
 
       const callArgs = mockGenerateContent.mock.calls[0][0] as {
         model: string;
         contents: string;
       };
-      expect(callArgs.model).toBe('gemini-2.5-flash');
+      expect(callArgs.model).toBe('gemini-2.5-flash-image');
       expect(callArgs.contents).toContain('Test prompt');
     });
 
@@ -67,47 +81,74 @@ describe('GeminiService', () => {
 
     it('should handle empty response', async () => {
       const mockResponse = {
-        text: null,
+        candidates: [
+          {
+            content: {
+              parts: [],
+            },
+          },
+        ],
       };
 
       mockGenerateContent.mockResolvedValue(mockResponse);
 
       await expect(geminiService.generatePoster('Test prompt')).rejects.toThrow(
-        'Failed to generate poster: No content generated',
+        'Failed to generate poster: No image data found in response',
       );
     });
   });
 
   describe('generateMockup', () => {
-    it('should generate mockup content from poster and prop description', async (): Promise<void> => {
+    it('should generate mockup image from poster image and prop description', async (): Promise<void> => {
+      const mockBase64Mockup = 'base64MockupImageDataHere';
       const mockResponse = {
-        text: 'Generated mockup content',
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  inlineData: {
+                    data: mockBase64Mockup,
+                    mimeType: 'image/png',
+                  },
+                },
+              ],
+            },
+          },
+        ],
       };
 
       mockGenerateContent.mockResolvedValue(mockResponse);
 
       const result = await geminiService.generateMockup(
-        'Poster description',
+        'base64PosterImageData',
         'Prop description',
       );
 
-      expect(result).toBe('Generated mockup content');
+      expect(result).toBe(mockBase64Mockup);
       expect(mockGenerateContent).toHaveBeenCalledTimes(1);
 
       const callArgs = mockGenerateContent.mock.calls[0][0] as {
         model: string;
-        contents: string;
+        contents: Array<{
+          parts: Array<{
+            text?: string;
+            inlineData?: { mimeType: string; data: string };
+          }>;
+        }>;
       };
-      expect(callArgs.model).toBe('gemini-2.5-flash');
-      expect(callArgs.contents).toContain('Poster description');
-      expect(callArgs.contents).toContain('Prop description');
+      expect(callArgs.model).toBe('gemini-2.5-flash-image');
+      expect(callArgs.contents[0].parts[0].text).toContain('Prop description');
+      expect(callArgs.contents[0].parts[1].inlineData?.data).toBe(
+        'base64PosterImageData',
+      );
     });
 
     it('should handle errors when generating mockup', async () => {
       mockGenerateContent.mockRejectedValue(new Error('API error'));
 
       await expect(
-        geminiService.generateMockup('Poster desc', 'Prop desc'),
+        geminiService.generateMockup('Poster image data', 'Prop desc'),
       ).rejects.toThrow('Failed to generate mockup: API error');
     });
   });

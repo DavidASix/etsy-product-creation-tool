@@ -20,22 +20,12 @@ export class GeminiService {
 
   /**
    * Generate a poster image based on a text prompt
-   * Note: Gemini doesn't directly generate images, so we'll use it to generate
-   * detailed descriptions that could be used with image generation APIs
-   * For this rough implementation, we'll generate a text-based poster
+   * Returns base64 encoded PNG image data
    */
   async generatePoster(prompt: string): Promise<string> {
     try {
-      const enhancedPrompt = `Create a detailed description for a digital poster design based on this prompt: "${prompt}".
-Include specific details about:
-- Layout and composition
-- Color scheme
-- Typography style
-- Visual elements
-- Overall mood and aesthetic
-- Text content that should appear on the poster
-
-Format your response as a detailed design specification that could be used to create the poster.`;
+      const enhancedPrompt = `Create a high-quality digital poster image for: "${prompt}".
+The poster should be visually appealing, professional, and suitable for selling as a digital product on Etsy.`;
 
       const response: GenerateContentResponse =
         await this.client.models.generateContent({
@@ -43,12 +33,19 @@ Format your response as a detailed design specification that could be used to cr
           contents: enhancedPrompt,
         });
 
-      const text = response.text;
-      if (!text) {
+      // Extract image data from response
+      if (!response.candidates?.[0]?.content?.parts) {
         throw new Error('No content generated');
       }
 
-      return text;
+      for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData?.data) {
+          // Return base64 encoded image data
+          return part.inlineData.data;
+        }
+      }
+
+      throw new Error('No image data found in response');
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Failed to generate poster: ${error.message}`);
@@ -59,40 +56,49 @@ Format your response as a detailed design specification that could be used to cr
 
   /**
    * Generate a mockup image by combining a poster with a prop/scene
-   * This uses Gemini to generate instructions for mockup creation
+   * Returns base64 encoded PNG image data
    */
   async generateMockup(
-    posterDescription: string,
+    posterImageBase64: string,
     propDescription: string,
   ): Promise<string> {
     try {
-      const mockupPrompt = `You are creating a product mockup for an Etsy listing.
-
-Poster design: ${posterDescription}
-Mockup prop/scene: ${propDescription}
-
-Generate a detailed description of how this poster would look when displayed in the specified mockup setting. Include:
-- How the poster fits into the scene
-- Lighting and shadows
-- Perspective and angles
-- Environmental details
-- How the prop complements the poster
-- Overall presentation quality
-
-Format this as a detailed mockup specification.`;
+      const mockupPrompt = `Create a realistic product mockup image showing this poster in the following setting: ${propDescription}.
+The mockup should be professional, photorealistic, and suitable for an Etsy product listing.`;
 
       const response: GenerateContentResponse =
         await this.client.models.generateContent({
           model,
-          contents: mockupPrompt,
+          contents: [
+            {
+              parts: [
+                {
+                  text: mockupPrompt,
+                },
+                {
+                  inlineData: {
+                    mimeType: 'image/png',
+                    data: posterImageBase64,
+                  },
+                },
+              ],
+            },
+          ],
         });
 
-      const text = response.text;
-      if (!text) {
+      // Extract image data from response
+      if (!response.candidates?.[0]?.content?.parts) {
         throw new Error('No content generated');
       }
 
-      return text;
+      for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData?.data) {
+          // Return base64 encoded image data
+          return part.inlineData.data;
+        }
+      }
+
+      throw new Error('No image data found in response');
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Failed to generate mockup: ${error.message}`);

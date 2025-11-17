@@ -78,27 +78,23 @@ async function generatePoster(
   console.log('\n⏳ Generating poster...\n');
 
   try {
-    const posterContent = await geminiService.generatePoster(prompt);
+    const posterImageBase64 = await geminiService.generatePoster(prompt);
 
+    const posterId = Date.now().toString();
     const poster: Poster = {
-      id: Date.now().toString(),
+      id: posterId,
       prompt,
-      imageData: posterContent,
+      imageData: posterImageBase64,
       createdAt: new Date(),
-      filepath: `output/posters/${Date.now()}.txt`,
+      filepath: `output/posters/${posterId}.png`,
     };
 
     await storageService.savePoster(poster);
 
-    console.log('✅ Poster generated successfully!');
+    console.log('✅ Poster image generated successfully!');
     console.log(`\nPoster ID: ${poster.id}`);
     console.log(`Saved to: ${poster.filepath}`);
-    console.log(`\nPoster preview:\n`);
-    console.log(
-      posterContent.substring(0, 300) +
-        (posterContent.length > 300 ? '...' : ''),
-    );
-    console.log('\n');
+    console.log('');
   } catch (error) {
     console.error(
       '\n❌ Error generating poster:',
@@ -156,31 +152,27 @@ async function generateMockup(
   console.log('\n⏳ Generating mockup...\n');
 
   try {
-    const mockupContent = await geminiService.generateMockup(
+    const mockupImageBase64 = await geminiService.generateMockup(
       poster.imageData,
       propDescription,
     );
 
+    const mockupId = Date.now().toString();
     const mockup: Mockup = {
-      id: Date.now().toString(),
+      id: mockupId,
       posterId: poster.id,
       propDescription,
-      imageData: mockupContent,
+      imageData: mockupImageBase64,
       createdAt: new Date(),
-      filepath: `output/mockups/${Date.now()}.txt`,
+      filepath: `output/mockups/${mockupId}.png`,
     };
 
     await storageService.saveMockup(mockup);
 
-    console.log('✅ Mockup generated successfully!');
+    console.log('✅ Mockup image generated successfully!');
     console.log(`\nMockup ID: ${mockup.id}`);
     console.log(`Saved to: ${mockup.filepath}`);
-    console.log(`\nMockup preview:\n`);
-    console.log(
-      mockupContent.substring(0, 300) +
-        (mockupContent.length > 300 ? '...' : ''),
-    );
-    console.log('\n');
+    console.log('');
   } catch (error) {
     console.error(
       '\n❌ Error generating mockup:',

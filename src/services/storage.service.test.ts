@@ -31,13 +31,13 @@ describe('StorageService', () => {
   });
 
   describe('savePoster', () => {
-    it('should save poster metadata and content', async () => {
+    it('should save poster metadata and image', async () => {
       const poster: Poster = {
         id: '123',
         prompt: 'Test poster',
         imageData: 'Test image data',
         createdAt: new Date(),
-        filepath: 'output/posters/123.txt',
+        filepath: 'output/posters/123.png',
       };
 
       vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify([]));
@@ -57,7 +57,7 @@ describe('StorageService', () => {
           prompt: 'Test poster',
           imageData: 'Test data',
           createdAt: new Date().toISOString(),
-          filepath: 'output/posters/123.txt',
+          filepath: 'output/posters/123.png',
         },
       ];
 
@@ -86,7 +86,7 @@ describe('StorageService', () => {
           prompt: 'Test poster',
           imageData: 'Test data',
           createdAt: new Date().toISOString(),
-          filepath: 'output/posters/123.txt',
+          filepath: 'output/posters/123.png',
         },
       ];
 
@@ -108,7 +108,7 @@ describe('StorageService', () => {
   });
 
   describe('saveMockup', () => {
-    it('should save mockup metadata and content', async () => {
+    it('should save mockup metadata and image', async () => {
       const mockup: Mockup = {
         id: '456',
         posterId: '123',
@@ -136,7 +136,7 @@ describe('StorageService', () => {
           propDescription: 'Test prop',
           imageData: 'Test data',
           createdAt: new Date().toISOString(),
-          filepath: 'output/mockups/456.txt',
+          filepath: 'output/mockups/456.png',
         },
       ];
 
@@ -158,7 +158,7 @@ describe('StorageService', () => {
           propDescription: 'Test prop 1',
           imageData: 'Test data',
           createdAt: new Date().toISOString(),
-          filepath: 'output/mockups/456.txt',
+          filepath: 'output/mockups/456.png',
         },
         {
           id: '457',
