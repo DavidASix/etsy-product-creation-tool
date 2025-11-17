@@ -1,15 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { GoogleGenAI } from '@google/genai';
+import type { GenerateContentResponse } from '@google/genai';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
 
 export class GeminiService {
-  private client: any;
+  private client: GoogleGenAI;
 
   constructor() {
     const apiKey = process.env.GEMINI_API_KEY;
@@ -39,10 +35,11 @@ Include specific details about:
 
 Format your response as a detailed design specification that could be used to create the poster.`;
 
-      const response = await this.client.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: enhancedPrompt,
-      });
+      const response: GenerateContentResponse =
+        await this.client.models.generateContent({
+          model: 'gemini-1.5-flash',
+          contents: enhancedPrompt,
+        });
 
       const text = response.text;
       if (!text) {
@@ -82,10 +79,11 @@ Generate a detailed description of how this poster would look when displayed in 
 
 Format this as a detailed mockup specification.`;
 
-      const response = await this.client.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: mockupPrompt,
-      });
+      const response: GenerateContentResponse =
+        await this.client.models.generateContent({
+          model: 'gemini-1.5-flash',
+          contents: mockupPrompt,
+        });
 
       const text = response.text;
       if (!text) {

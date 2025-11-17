@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { GeminiService } from './gemini.service';
 
@@ -48,12 +47,14 @@ describe('GeminiService', () => {
       const result = await geminiService.generatePoster('Test prompt');
 
       expect(result).toBe('Generated poster content');
-      expect(mockGenerateContent).toHaveBeenCalledWith(
-        expect.objectContaining({
-          model: 'gemini-1.5-flash',
-          contents: expect.stringContaining('Test prompt'),
-        }),
-      );
+      expect(mockGenerateContent).toHaveBeenCalledTimes(1);
+
+      const callArgs = mockGenerateContent.mock.calls[0][0] as {
+        model: string;
+        contents: string;
+      };
+      expect(callArgs.model).toBe('gemini-1.5-flash');
+      expect(callArgs.contents).toContain('Test prompt');
     });
 
     it('should handle errors when generating poster', async () => {
@@ -91,12 +92,15 @@ describe('GeminiService', () => {
       );
 
       expect(result).toBe('Generated mockup content');
-      expect(mockGenerateContent).toHaveBeenCalledWith(
-        expect.objectContaining({
-          model: 'gemini-1.5-flash',
-          contents: expect.stringContaining('Poster description'),
-        }),
-      );
+      expect(mockGenerateContent).toHaveBeenCalledTimes(1);
+
+      const callArgs = mockGenerateContent.mock.calls[0][0] as {
+        model: string;
+        contents: string;
+      };
+      expect(callArgs.model).toBe('gemini-1.5-flash');
+      expect(callArgs.contents).toContain('Poster description');
+      expect(callArgs.contents).toContain('Prop description');
     });
 
     it('should handle errors when generating mockup', async () => {
