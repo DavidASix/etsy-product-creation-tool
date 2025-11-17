@@ -4,6 +4,8 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
+const model = 'gemini-2.5-flash-image';
+
 export class GeminiService {
   private client: GoogleGenAI;
 
@@ -37,7 +39,7 @@ Format your response as a detailed design specification that could be used to cr
 
       const response: GenerateContentResponse =
         await this.client.models.generateContent({
-          model: 'gemini-2.5-flash',
+          model,
           contents: enhancedPrompt,
         });
 
@@ -81,7 +83,7 @@ Format this as a detailed mockup specification.`;
 
       const response: GenerateContentResponse =
         await this.client.models.generateContent({
-          model: 'gemini-2.5-flash',
+          model,
           contents: mockupPrompt,
         });
 
