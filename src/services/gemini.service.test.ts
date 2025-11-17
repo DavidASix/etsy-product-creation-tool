@@ -66,7 +66,7 @@ describe('GeminiService', () => {
       };
       expect(callArgs.model).toBe('imagen-4.0-generate-001');
       expect(callArgs.prompt).toContain('Test prompt');
-      expect(callArgs.config.aspectRatio).toBe('27:40');
+      expect(callArgs.config.aspectRatio).toBe('9:16');
       expect(callArgs.config.numberOfImages).toBe(1);
     });
 
@@ -129,12 +129,14 @@ describe('GeminiService', () => {
             text?: string;
           }>;
         }>;
+        config?: { aspectRatio: string };
       };
       expect(callArgs.model).toBe('gemini-2.5-flash-image');
       expect(callArgs.contents[0].parts[0].inlineData?.data).toBe(
         'base64PosterImageData',
       );
       expect(callArgs.contents[0].parts[1].text).toContain('Prop description');
+      expect(callArgs.config?.aspectRatio).toBe('4:3');
     });
 
     it('should handle errors when generating mockup', async () => {

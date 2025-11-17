@@ -22,7 +22,7 @@ export class GeminiService {
   /**
    * Generate a poster image based on a text prompt
    * Returns base64 encoded PNG image data
-   * Posters use 27:40 aspect ratio (portrait movie poster format)
+   * Posters use 9:16 aspect ratio (portrait format)
    */
   async generatePoster(prompt: string): Promise<string> {
     try {
@@ -60,6 +60,7 @@ The poster should be visually appealing, professional, and suitable for selling 
    * Generate a mockup image by combining a poster with a prop/scene
    * Returns base64 encoded PNG image data
    * Uses generateContent to include the actual poster image in the scene
+   * Mockups use 4:3 aspect ratio
    */
   async generateMockup(
     posterImageBase64: string,
@@ -97,6 +98,9 @@ The scene should look natural and inviting, showcasing the poster as the focal p
         await this.client.models.generateContent({
           model: GEMINI_IMAGE_MODEL,
           contents: contents,
+          config: {
+            aspectRatio: '4:3',
+          },
         });
 
       // Extract image data from response
