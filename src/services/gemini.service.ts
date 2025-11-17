@@ -34,7 +34,7 @@ The poster should be visually appealing, professional, and suitable for selling 
         prompt: enhancedPrompt,
         config: {
           numberOfImages: 1,
-          aspectRatio: '27:40',
+          aspectRatio: '9:16',
           outputMimeType: 'image/png',
         },
       });
