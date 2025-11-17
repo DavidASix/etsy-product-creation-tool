@@ -3,6 +3,28 @@ import { runCli } from './cli';
 import inquirer from 'inquirer';
 
 vi.mock('inquirer');
+vi.mock('./services/storage.service', () => {
+  return {
+    StorageService: vi.fn(function StorageService() {
+      return {
+        initialize: vi.fn().mockResolvedValue(undefined),
+        getAllPosters: vi.fn().mockResolvedValue([]),
+        getPosterById: vi.fn().mockResolvedValue(null),
+        saveMockup: vi.fn().mockResolvedValue(undefined),
+        getAllMockups: vi.fn().mockResolvedValue([]),
+      };
+    }),
+  };
+});
+vi.mock('./services/gemini.service', () => {
+  return {
+    GeminiService: vi.fn(function GeminiService() {
+      return {
+        generateMockup: vi.fn().mockResolvedValue('Mock mockup content'),
+      };
+    }),
+  };
+});
 
 describe('CLI', () => {
   let consoleLogSpy: ReturnType<typeof vi.spyOn>;
@@ -16,43 +38,58 @@ describe('CLI', () => {
   });
 
   it('should display welcome message', async () => {
-    vi.mocked(inquirer.prompt).mockResolvedValue({ userInput: 'test' });
+    vi.mocked(inquirer.prompt).mockResolvedValue({ action: 'exit' });
 
     await runCli();
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
-      'Hello! Welcome to the Etsy Product Creator CLI.',
+      '\n🎨 Etsy Product Creator - Mockup Generator CLI\n',
     );
   });
 
-  it('should prompt for user input', async () => {
-    vi.mocked(inquirer.prompt).mockResolvedValue({ userInput: 'test input' });
+  it('should show main menu options', async () => {
+    vi.mocked(inquirer.prompt).mockResolvedValue({ action: 'exit' });
 
     await runCli();
 
-    expect(inquirer.prompt).toHaveBeenCalledWith([
-      {
-        type: 'input',
-        name: 'userInput',
-        message: 'Please enter something:',
-      },
-    ]);
+    expect(inquirer.prompt).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'list',
+          name: 'action',
+          message: 'What would you like to do?',
+        }),
+      ]),
+    );
   });
 
-  it('should echo back user input', async () => {
-    const testInput = 'Hello World';
-    vi.mocked(inquirer.prompt).mockResolvedValue({ userInput: testInput });
+  it('should exit when user selects exit', async () => {
+    vi.mocked(inquirer.prompt).mockResolvedValue({ action: 'exit' });
 
     await runCli();
 
-    expect(consoleLogSpy).toHaveBeenCalledWith(`You said: ${testInput}`);
+    expect(consoleLogSpy).toHaveBeenCalledWith('\n👋 Goodbye!\n');
   });
 
-  it('should handle empty input', async () => {
-    vi.mocked(inquirer.prompt).mockResolvedValue({ userInput: '' });
+  it('should handle view mockups with no mockups', async () => {
+    vi.mocked(inquirer.prompt)
+      .mockResolvedValueOnce({ action: 'view-mockups' })
+      .mockResolvedValueOnce({ action: 'exit' });
 
     await runCli();
 
-    expect(consoleLogSpy).toHaveBeenCalledWith('You said: ');
+    expect(consoleLogSpy).toHaveBeenCalledWith('\n📭 No mockups found.\n');
+  });
+
+  it('should handle generate mockup with no posters', async () => {
+    vi.mocked(inquirer.prompt)
+      .mockResolvedValueOnce({ action: 'generate-mockup' })
+      .mockResolvedValueOnce({ action: 'exit' });
+
+    await runCli();
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      '\n❌ No posters found. Please generate a poster using the UI first.\n',
+    );
   });
 });
