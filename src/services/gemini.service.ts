@@ -1,10 +1,9 @@
 import { GoogleGenAI } from '@google/genai';
-import type { GenerateContentResponse } from '@google/genai';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-const model = 'gemini-2.5-flash-image';
+const IMAGEN_MODEL = 'imagen-4.0-generate-001';
 
 export class GeminiService {
   private client: GoogleGenAI;
@@ -21,31 +20,32 @@ export class GeminiService {
   /**
    * Generate a poster image based on a text prompt
    * Returns base64 encoded PNG image data
+   * Posters use 27:40 aspect ratio (portrait movie poster format)
    */
   async generatePoster(prompt: string): Promise<string> {
     try {
       const enhancedPrompt = `Create a high-quality digital poster image for: "${prompt}".
 The poster should be visually appealing, professional, and suitable for selling as a digital product on Etsy.`;
 
-      const response: GenerateContentResponse =
-        await this.client.models.generateContent({
-          model,
-          contents: enhancedPrompt,
-        });
+      const response = await this.client.models.generateImages({
+        model: IMAGEN_MODEL,
+        prompt: enhancedPrompt,
+        config: {
+          numberOfImages: 1,
+          aspectRatio: '27:40',
+          outputMimeType: 'image/png',
+        },
+      });
 
       // Extract image data from response
-      if (!response.candidates?.[0]?.content?.parts) {
-        throw new Error('No content generated');
+      const imageBytes = response?.generatedImages?.[0]?.image?.imageBytes;
+
+      if (!imageBytes) {
+        throw new Error('No image data found in response');
       }
 
-      for (const part of response.candidates[0].content.parts) {
-        if (part.inlineData?.data) {
-          // Return base64 encoded image data
-          return part.inlineData.data;
-        }
-      }
-
-      throw new Error('No image data found in response');
+      // Return base64 encoded image data
+      return imageBytes;
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Failed to generate poster: ${error.message}`);
@@ -57,48 +57,38 @@ The poster should be visually appealing, professional, and suitable for selling 
   /**
    * Generate a mockup image by combining a poster with a prop/scene
    * Returns base64 encoded PNG image data
+   * Mockups use 16:9 aspect ratio (standard display format)
    */
   async generateMockup(
     posterImageBase64: string,
     propDescription: string,
   ): Promise<string> {
     try {
-      const mockupPrompt = `Create a realistic product mockup image showing this poster in the following setting: ${propDescription}.
-The mockup should be professional, photorealistic, and suitable for an Etsy product listing.`;
+      // For mockups, we generate a new image showing the poster in context
+      // Since we can't directly composite images with Imagen, we describe what we want
+      const mockupPrompt = `Create a realistic, photorealistic product mockup image showing a digital poster displayed ${propDescription}.
+The poster should be clearly visible and the mockup should be professional, high-quality, and suitable for an Etsy product listing.
+Make it look like a real photograph of the poster in the described setting.`;
 
-      const response: GenerateContentResponse =
-        await this.client.models.generateContent({
-          model,
-          contents: [
-            {
-              parts: [
-                {
-                  text: mockupPrompt,
-                },
-                {
-                  inlineData: {
-                    mimeType: 'image/png',
-                    data: posterImageBase64,
-                  },
-                },
-              ],
-            },
-          ],
-        });
+      const response = await this.client.models.generateImages({
+        model: IMAGEN_MODEL,
+        prompt: mockupPrompt,
+        config: {
+          numberOfImages: 1,
+          aspectRatio: '16:9',
+          outputMimeType: 'image/png',
+        },
+      });
 
       // Extract image data from response
-      if (!response.candidates?.[0]?.content?.parts) {
-        throw new Error('No content generated');
+      const imageBytes = response?.generatedImages?.[0]?.image?.imageBytes;
+
+      if (!imageBytes) {
+        throw new Error('No image data found in response');
       }
 
-      for (const part of response.candidates[0].content.parts) {
-        if (part.inlineData?.data) {
-          // Return base64 encoded image data
-          return part.inlineData.data;
-        }
-      }
-
-      throw new Error('No image data found in response');
+      // Return base64 encoded image data
+      return imageBytes;
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Failed to generate mockup: ${error.message}`);
