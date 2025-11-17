@@ -129,13 +129,14 @@ describe('GeminiService', () => {
             text?: string;
           }>;
         }>;
+        config?: { imageConfig?: { aspectRatio: string } };
       };
       expect(callArgs.model).toBe('gemini-2.5-flash-image');
       expect(callArgs.contents[0].parts[0].inlineData?.data).toBe(
         'base64PosterImageData',
       );
       expect(callArgs.contents[0].parts[1].text).toContain('Prop description');
-      expect(callArgs.contents[0].parts[1].text).toContain('4:3 aspect ratio');
+      expect(callArgs.config?.imageConfig?.aspectRatio).toBe('4:3');
     });
 
     it('should handle errors when generating mockup', async () => {

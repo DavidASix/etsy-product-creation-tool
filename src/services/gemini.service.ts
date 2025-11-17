@@ -60,7 +60,7 @@ The poster should be visually appealing, professional, and suitable for selling 
    * Generate a mockup image by combining a poster with a prop/scene
    * Returns base64 encoded PNG image data
    * Uses generateContent to include the actual poster image in the scene
-   * Requests 4:3 aspect ratio via prompt (generateContent doesn't support aspectRatio config)
+   * Mockups use 4:3 aspect ratio
    */
   async generateMockup(
     posterImageBase64: string,
@@ -72,11 +72,10 @@ The poster should be visually appealing, professional, and suitable for selling 
         propDescription.trim() ||
         'on the wall in a modern, minimalist living room with neutral tones';
 
-      const mockupPrompt = `Create a photorealistic mockup image in 4:3 aspect ratio showing this poster displayed ${sceneDescription}.
+      const mockupPrompt = `Create a photorealistic mockup image showing this poster displayed ${sceneDescription}.
 The poster should be clearly visible, well-lit, and professionally presented in the scene.
 Make it look like a high-quality product photography suitable for an Etsy listing.
-The scene should look natural and inviting, showcasing the poster as the focal point.
-Generate the mockup in 4:3 (landscape) aspect ratio.`;
+The scene should look natural and inviting, showcasing the poster as the focal point.`;
 
       // Use generateContent with the poster image as context
       const contents = [
@@ -99,6 +98,11 @@ Generate the mockup in 4:3 (landscape) aspect ratio.`;
         await this.client.models.generateContent({
           model: GEMINI_IMAGE_MODEL,
           contents: contents,
+          config: {
+            imageConfig: {
+              aspectRatio: '4:3',
+            },
+          },
         });
 
       // Extract image data from response
