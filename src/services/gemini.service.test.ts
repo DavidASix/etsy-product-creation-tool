@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { GeminiService } from './gemini.service';
 
 const mockGenerateImages = vi.fn();
+const mockGenerateContent = vi.fn();
 
 vi.mock('@google/genai', () => {
   return {
@@ -9,6 +10,7 @@ vi.mock('@google/genai', () => {
       return {
         models: {
           generateImages: mockGenerateImages,
+          generateContent: mockGenerateContent,
         },
       };
     }),
@@ -21,6 +23,7 @@ describe('GeminiService', () => {
   beforeEach(() => {
     process.env.GEMINI_API_KEY = 'test-api-key';
     mockGenerateImages.mockClear();
+    mockGenerateContent.mockClear();
     geminiService = new GeminiService();
   });
 
@@ -92,16 +95,23 @@ describe('GeminiService', () => {
     it('should generate mockup image from poster image and prop description', async (): Promise<void> => {
       const mockBase64Mockup = 'base64MockupImageDataHere';
       const mockResponse = {
-        generatedImages: [
+        candidates: [
           {
-            image: {
-              imageBytes: mockBase64Mockup,
+            content: {
+              parts: [
+                {
+                  inlineData: {
+                    data: mockBase64Mockup,
+                    mimeType: 'image/png',
+                  },
+                },
+              ],
             },
           },
         ],
       };
 
-      mockGenerateImages.mockResolvedValue(mockResponse);
+      mockGenerateContent.mockResolvedValue(mockResponse);
 
       const result = await geminiService.generateMockup(
         'base64PosterImageData',
@@ -109,25 +119,65 @@ describe('GeminiService', () => {
       );
 
       expect(result).toBe(mockBase64Mockup);
-      expect(mockGenerateImages).toHaveBeenCalledTimes(1);
+      expect(mockGenerateContent).toHaveBeenCalledTimes(1);
 
-      const callArgs = mockGenerateImages.mock.calls[0][0] as {
+      const callArgs = mockGenerateContent.mock.calls[0][0] as {
         model: string;
-        prompt: string;
-        config: { numberOfImages: number; aspectRatio: string };
+        contents: Array<{
+          parts: Array<{
+            inlineData?: { mimeType: string; data: string };
+            text?: string;
+          }>;
+        }>;
       };
-      expect(callArgs.model).toBe('imagen-4.0-generate-001');
-      expect(callArgs.prompt).toContain('Prop description');
-      expect(callArgs.config.aspectRatio).toBe('16:9');
-      expect(callArgs.config.numberOfImages).toBe(1);
+      expect(callArgs.model).toBe('gemini-2.5-flash-image');
+      expect(callArgs.contents[0].parts[0].inlineData?.data).toBe(
+        'base64PosterImageData',
+      );
+      expect(callArgs.contents[0].parts[1].text).toContain('Prop description');
     });
 
     it('should handle errors when generating mockup', async () => {
-      mockGenerateImages.mockRejectedValue(new Error('API error'));
+      mockGenerateContent.mockRejectedValue(new Error('API error'));
 
       await expect(
         geminiService.generateMockup('Poster image data', 'Prop desc'),
       ).rejects.toThrow('Failed to generate mockup: API error');
+    });
+
+    it('should use default room description if none provided', async () => {
+      const mockBase64Mockup = 'base64MockupImageDataHere';
+      const mockResponse = {
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  inlineData: {
+                    data: mockBase64Mockup,
+                    mimeType: 'image/png',
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      };
+
+      mockGenerateContent.mockResolvedValue(mockResponse);
+
+      await geminiService.generateMockup('base64PosterImageData', '');
+
+      const callArgs = mockGenerateContent.mock.calls[0][0] as {
+        contents: Array<{
+          parts: Array<{
+            text?: string;
+          }>;
+        }>;
+      };
+      expect(callArgs.contents[0].parts[1].text).toContain(
+        'modern, minimalist living room',
+      );
     });
   });
 });
