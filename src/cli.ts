@@ -143,9 +143,7 @@ async function generateMockup(
       type: 'input',
       name: 'propDescription',
       message:
-        'Describe the mockup scene/prop (e.g., "framed on a white wall in a modern living room"):',
-      validate: (input: string) =>
-        input.trim() !== '' || 'Please enter a description',
+        'Describe the mockup scene/prop (leave blank for default modern living room):',
     },
   ]);
 
