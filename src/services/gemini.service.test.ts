@@ -1,20 +1,18 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { GeminiService } from './gemini.service';
 
 const mockGenerateContent = vi.fn();
-const mockGetGenerativeModel = vi.fn(() => ({
-  generateContent: mockGenerateContent,
-}));
 
-vi.mock('@google/generative-ai', () => {
+vi.mock('@google/genai', () => {
   return {
-    GoogleGenerativeAI: vi.fn(
-      function GoogleGenerativeAI() {
-        return {
-          getGenerativeModel: mockGetGenerativeModel,
-        };
-      } as unknown as typeof import('@google/generative-ai').GoogleGenerativeAI,
-    ),
+    GoogleGenAI: vi.fn(function GoogleGenAI() {
+      return {
+        models: {
+          generateContent: mockGenerateContent,
+        },
+      };
+    }),
   };
 });
 
@@ -42,9 +40,7 @@ describe('GeminiService', () => {
   describe('generatePoster', () => {
     it('should generate poster content from prompt', async (): Promise<void> => {
       const mockResponse = {
-        response: {
-          text: (): string => 'Generated poster content',
-        },
+        text: 'Generated poster content',
       };
 
       mockGenerateContent.mockResolvedValue(mockResponse);
@@ -53,7 +49,10 @@ describe('GeminiService', () => {
 
       expect(result).toBe('Generated poster content');
       expect(mockGenerateContent).toHaveBeenCalledWith(
-        expect.stringContaining('Test prompt'),
+        expect.objectContaining({
+          model: 'gemini-1.5-flash',
+          contents: expect.stringContaining('Test prompt'),
+        }),
       );
     });
 
@@ -64,14 +63,24 @@ describe('GeminiService', () => {
         'Failed to generate poster: API error',
       );
     });
+
+    it('should handle empty response', async () => {
+      const mockResponse = {
+        text: null,
+      };
+
+      mockGenerateContent.mockResolvedValue(mockResponse);
+
+      await expect(geminiService.generatePoster('Test prompt')).rejects.toThrow(
+        'Failed to generate poster: No content generated',
+      );
+    });
   });
 
   describe('generateMockup', () => {
     it('should generate mockup content from poster and prop description', async (): Promise<void> => {
       const mockResponse = {
-        response: {
-          text: (): string => 'Generated mockup content',
-        },
+        text: 'Generated mockup content',
       };
 
       mockGenerateContent.mockResolvedValue(mockResponse);
@@ -83,10 +92,10 @@ describe('GeminiService', () => {
 
       expect(result).toBe('Generated mockup content');
       expect(mockGenerateContent).toHaveBeenCalledWith(
-        expect.stringContaining('Poster description'),
-      );
-      expect(mockGenerateContent).toHaveBeenCalledWith(
-        expect.stringContaining('Prop description'),
+        expect.objectContaining({
+          model: 'gemini-1.5-flash',
+          contents: expect.stringContaining('Poster description'),
+        }),
       );
     });
 

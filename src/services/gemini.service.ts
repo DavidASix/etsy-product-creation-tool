@@ -1,11 +1,15 @@
-import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { GoogleGenAI } from '@google/genai';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
 
 export class GeminiService {
-  private genAI: GoogleGenerativeAI;
-  private model: GenerativeModel;
+  private client: any;
 
   constructor() {
     const apiKey = process.env.GEMINI_API_KEY;
@@ -13,8 +17,7 @@ export class GeminiService {
       throw new Error('GEMINI_API_KEY is not set in environment variables');
     }
 
-    this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    this.client = new GoogleGenAI({ apiKey });
   }
 
   /**
@@ -36,9 +39,17 @@ Include specific details about:
 
 Format your response as a detailed design specification that could be used to create the poster.`;
 
-      const result = await this.model.generateContent(enhancedPrompt);
-      const response = result.response;
-      return response.text();
+      const response = await this.client.models.generateContent({
+        model: 'gemini-1.5-flash',
+        contents: enhancedPrompt,
+      });
+
+      const text = response.text;
+      if (!text) {
+        throw new Error('No content generated');
+      }
+
+      return text;
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Failed to generate poster: ${error.message}`);
@@ -71,9 +82,17 @@ Generate a detailed description of how this poster would look when displayed in 
 
 Format this as a detailed mockup specification.`;
 
-      const result = await this.model.generateContent(mockupPrompt);
-      const response = result.response;
-      return response.text();
+      const response = await this.client.models.generateContent({
+        model: 'gemini-1.5-flash',
+        contents: mockupPrompt,
+      });
+
+      const text = response.text;
+      if (!text) {
+        throw new Error('No content generated');
+      }
+
+      return text;
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Failed to generate mockup: ${error.message}`);
